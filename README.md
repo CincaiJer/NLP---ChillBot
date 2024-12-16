@@ -39,6 +39,6 @@ A simple Streamlit app template for you to modify!
    https://github.com/oschwartz10612/poppler-windows/releases/tag/v24.08.0-0
    https://youtu.be/PyF1Vh9040Y?si=JEtpsYmFGWEXE4U6
    Check the code, paste pathway at
-   poppler_path = r"C:\Users\Nicholas\Downloads\Interactive-Chat-App-main\poppler-24.08.0\Library\bin"
+   poppler_path = r'C:\Users\User\Downloads\Release-24.08.0-0\poppler-24.08.0\Library\bin'
 
    ```
