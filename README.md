@@ -22,6 +22,8 @@ A simple Streamlit app template for you to modify!
    pip install transformers
    pip install pdf2image
    pip install Pillow
+   pip install sentencepiece
+   pip install sacremoses
    ```
 
 2. Install tesseract
