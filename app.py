@@ -59,7 +59,7 @@ def get_pdf_text_and_tables(pdf_docs):
                     else:
                         st.warning(f"No readable text on page {page_number} of {pdf.name}. Attempting OCR...")
                         # Use OCR as fallback
-                        poppler_path = r"C:\Users\Nicholas\Downloads\Interactive-Chat-App-main\poppler-24.08.0\Library\bin"
+                        poppler_path = r"C:\Users\Nicholas\Downloads\-Interactive-Chat-App-main\poppler-24.08.0\Library\bin"
                         images = convert_from_path(temp_pdf_path, poppler_path=poppler_path)
                         
                         for image in images:
@@ -101,10 +101,14 @@ def get_vectorstore(text_chunks):
 
 
 # TO GET CONVERSATION CHAIN
-def get_conversation_chain(vectorstore):
+def get_conversation_chain(vectorstore, selected_model):
     llm = HuggingFaceHub(
-        repo_id="google/flan-t5-large",     # SELECTED MODEL FOR CONVERSATION   DONT CHANGE
-        model_kwargs={"temperature": 0.5, "max_length": 512})
+        # T2T GENERATION
+        # google/flan-t5-base
+        # google/flan-t5-large
+        # describeai/gemini
+         repo_id=selected_model,
+        model_kwargs={"temperature": 0.5})
     memory = ConversationBufferMemory(
         memory_key='chat_history', return_messages=True)
     conversation_chain = ConversationalRetrievalChain.from_llm(
@@ -235,8 +239,8 @@ def save_chat_history(chat_history):
 # SUMMARIZE PDF
 def summarize_text(text_chunks):
     llm = HuggingFaceHub(
-        repo_id="google/flan-t5-large",
-        model_kwargs={"temperature": 0.5, "max_length": 512})
+        repo_id="facebook/bart-large-cnn",      # LLM FOR SUMMARY
+        model_kwargs={"temperature": 0.5})
     summaries = []
     for i, chunk in enumerate(text_chunks):
         with st.spinner(f"Summarizing chunk {i+1}/{len(text_chunks)}..."):
@@ -302,6 +306,18 @@ def main():
     with st.chat_message("assistant"):
         st.write("Hello Chill Guy! Feel free to upload your PDF(s) and ask questions.")
 
+    # SIDEBAR
+    with st.sidebar:
+        with st.expander("🚀 **Model Configuration**", expanded=False):
+            llm_model = st.selectbox(
+                "Select an LLM Model:",
+                ["google/flan-t5-large", "Qwen/QwQ-32B-Preview", "HuggingFaceH4/zephyr-7b-alpha"],
+            )
+            if llm_model == "google/flan-t5-large":
+                st.success("✅ This model is optimized for **Q&A tasks**.")
+            else:
+                st.warning("✨ This model works best for **text generation**.")
+
     # USER INPUT    MUST PUT ABOVE OTHER PROCESSING TO ENSURE CHAT HISTORY WORKS
     user_question = st.chat_input("Ask a question about your document(s):")
     if user_question:
@@ -309,7 +325,8 @@ def main():
 
     # SIDEBAR
     with st.sidebar:
-        pdf_docs = st.file_uploader("Upload your PDF(s) here and click on 'Process'", accept_multiple_files=True)
+        st.divider()
+        pdf_docs = st.file_uploader("📄 PDF Upload", accept_multiple_files=True)
         
         # VALIDATION FOR UPLOADED FILE 
         validation_error = validate_pdf_files(pdf_docs)
@@ -358,7 +375,7 @@ def main():
                 vectorstore = get_vectorstore(text_chunks)
 
                 # CREATE CONVERSATION CHAIN
-                st.session_state.conversation = get_conversation_chain(vectorstore)
+                st.session_state.conversation = get_conversation_chain(vectorstore, llm_model)
 
                 # DISPLAY TABLES (if extracted)
                 display_tables(tables)
