@@ -37,6 +37,7 @@ def validate_pdf_files(pdf_docs, max_files=3, max_size_mb=5):
                 return f"File: {pdf.name} is not a PDF. \n\nPlease upload only PDF files."
     return None
 
+
 # TO EXTRACT RAW TEXT FROM PDF
 def get_pdf_text_and_tables(pdf_docs):
     text = ""
@@ -52,20 +53,24 @@ def get_pdf_text_and_tables(pdf_docs):
             with pdfplumber.open(temp_pdf_path) as pdf_reader:
                 # Loop through all pages in the PDF
                 for page_number, page in enumerate(pdf_reader.pages, start=1):
-                    page_text = page.extract_text()
+                    page_text = page.extract_text()  # Extract text from the page
                     
-                    if page_text:
+                    if page_text and page_text.strip():  # Only add non-empty text
                         text += page_text
+                        st.write("This is normal:", text)
                     else:
                         st.warning(f"No readable text on page {page_number} of {pdf.name}. Attempting OCR...")
-                        # Use OCR as fallback
+                        # Use OCR as fallback only for empty pages
                         poppler_path = r"C:\Users\Nicholas\Downloads\-Interactive-Chat-App-main\poppler-24.08.0\Library\bin"
-                        images = convert_from_path(temp_pdf_path, poppler_path=poppler_path)
+                        images = convert_from_path(temp_pdf_path, poppler_path=poppler_path, first_page=page_number, last_page=page_number)
                         
                         for image in images:
                             ocr_text = pytesseract.image_to_string(image, lang='eng')
-                            text += ocr_text
+                            if ocr_text.strip():  # Only add non-empty OCR text
+                                text += ocr_text
+                                st.write("This is OCR:", text)
                     
+                    # Extract tables if available
                     page_tables = page.extract_tables()
                     if page_tables:
                         tables.extend(page_tables)
@@ -78,6 +83,7 @@ def get_pdf_text_and_tables(pdf_docs):
         return "", []
     
     return text, tables
+
 
 
 # TO CHUNK RAW TEXT
@@ -180,18 +186,18 @@ def handle_userinput(user_question):
                     st.write(summary)
                     st.success(f"Summary generated successfully in {time_taken:.2f} seconds!")
     elif user_question.lower() == "translate":      # TRANSLATION
-        with st.spinner("Translating text to Chinese..."):
+        with st.spinner("Translating text to Indonesian..."):
             # USE CACHED IF AVAILABLE
-            if "chinese_translation" in st.session_state and st.session_state.chinese_translation: 
-                st.write("### Cached Translated Text (Chinese):")
-                st.write(st.session_state.chinese_translation)
+            if "indonesian_translation" in st.session_state and st.session_state.indonesian_translation: 
+                st.write("### Cached Translated Text (Indonesian):")
+                st.write(st.session_state.indonesian_translation)
             elif "text_chunks" in st.session_state:
                 start_time = time.time()
-                chinese_translation = translate_large_text_to_chinese(st.session_state.text_chunks)
+                indonesian_translation = translate_large_text_to_indonesian(st.session_state.text_chunks)
                 time_taken = time.time() - start_time
-                st.session_state.chinese_translation = chinese_translation
-                st.write("### Translated Text (Chinese):")
-                st.write(chinese_translation)
+                st.session_state.indonesian_translation = indonesian_translation
+                st.write("### Translated Text (Indonesian):")
+                st.write(indonesian_translation)
                 st.success(f"Translation generated successfully in {time_taken:.2f} seconds!")
             else:
                 st.warning("Please process the PDF first and enable translation.")
@@ -251,18 +257,10 @@ def summarize_text(text_chunks):
     return final_summary
 
 
-# FORMAT SUMMARY
-def format_summary(summary):
-    # Convert plain text summary into bullet points or paragraphs
-    bullet_points = summary.split(". ")
-    formatted_summary = "\n- " + "\n- ".join(bullet_points)
-    return formatted_summary
-
-
-# TRANSLATE TO CHINESE
-def translate_to_chinese(text):
-    # Load English to Chinese model
-    model_name = "Helsinki-NLP/opus-mt-en-zh"       # SELECTED MODEL FOR TRANSLATION EN-CN
+# TRANSLATE TO INDONESIAN
+def translate_to_indonesian(text):
+    # Load English to Indonesian model
+    model_name = "Helsinki-NLP/opus-mt-en-id"       # SELECTED MODEL FOR TRANSLATION EN-ID
     tokenizer = MarianTokenizer.from_pretrained(model_name)
     model = MarianMTModel.from_pretrained(model_name)
 
@@ -276,11 +274,11 @@ def translate_to_chinese(text):
     return translated_text
 
 
-# LARGE TEXT TO CHINESE
-def translate_large_text_to_chinese(text_chunks):
+# LARGE TEXT TO INDONESIAN
+def translate_large_text_to_indonesian(text_chunks):
     translated_chunks = []
     for chunk in text_chunks:
-        translated_chunks.append(translate_to_chinese(chunk))
+        translated_chunks.append(translate_to_indonesian(chunk))
     return " ".join(translated_chunks)
 
 
@@ -357,7 +355,7 @@ def main():
             # CLEAR PREVIOUS STATE
             st.session_state.conversation = None
             st.session_state.chat_history = None
-            st.session_state.chinese_translation = None  
+            st.session_state.indonesian_translation = None  
             st.session_state.summary = None  
             st.session_state.text_chunks = None  
 
@@ -367,15 +365,18 @@ def main():
             if raw_text.strip():
                 # GET TEXT CHUNKS
                 text_chunks = get_text_chunks(raw_text, chunk_size, chunk_overlap)
+                st.write(text_chunks)
 
                 # Store the text chunks in session_state for future use (e.g., summarization or translation)
                 st.session_state.text_chunks = text_chunks
 
                 # CREATE VECTOR STORE
                 vectorstore = get_vectorstore(text_chunks)
+                st.write(vectorstore)
 
                 # CREATE CONVERSATION CHAIN
                 st.session_state.conversation = get_conversation_chain(vectorstore, llm_model)
+                st.write(st.session_state.conversation)
 
                 # DISPLAY TABLES (if extracted)
                 display_tables(tables)
@@ -394,7 +395,7 @@ def main():
             else:
                 return
             st.success(f"PDF(s) processed successfully in {time_taken:.2f} seconds.")
-            st.info("Enter [Summary] to get a summary of your PDF(s).\n\nEnter [Translate] to translate PDF(s) into Chinese.\n\nEnter [your_question] to ask anything about the PDF(s).")
+            st.info("Enter [Summary] to get a summary of your PDF(s).\n\nEnter [Translate] to translate PDF(s) into Indonesian.\n\nEnter [your_question] to ask anything about the PDF(s).")
 
 if __name__ == '__main__':
     main()
