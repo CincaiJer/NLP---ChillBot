@@ -57,7 +57,6 @@ def get_pdf_text_and_tables(pdf_docs):
                     
                     if page_text and page_text.strip():  # Only add non-empty text
                         text += page_text
-                        st.write("This is normal:", text)
                     else:
                         st.warning(f"No readable text on page {page_number} of {pdf.name}. Attempting OCR...")
                         # Use OCR as fallback only for empty pages
@@ -68,7 +67,6 @@ def get_pdf_text_and_tables(pdf_docs):
                             ocr_text = pytesseract.image_to_string(image, lang='eng')
                             if ocr_text.strip():  # Only add non-empty OCR text
                                 text += ocr_text
-                                st.write("This is OCR:", text)
                     
                     # Extract tables if available
                     page_tables = page.extract_tables()
@@ -365,18 +363,15 @@ def main():
             if raw_text.strip():
                 # GET TEXT CHUNKS
                 text_chunks = get_text_chunks(raw_text, chunk_size, chunk_overlap)
-                st.write(text_chunks)
 
                 # Store the text chunks in session_state for future use (e.g., summarization or translation)
                 st.session_state.text_chunks = text_chunks
 
                 # CREATE VECTOR STORE
                 vectorstore = get_vectorstore(text_chunks)
-                st.write(vectorstore)
 
                 # CREATE CONVERSATION CHAIN
                 st.session_state.conversation = get_conversation_chain(vectorstore, llm_model)
-                st.write(st.session_state.conversation)
 
                 # DISPLAY TABLES (if extracted)
                 display_tables(tables)
