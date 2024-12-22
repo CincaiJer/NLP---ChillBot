@@ -12,16 +12,18 @@ A simple Streamlit app template for you to modify!
    pip install streamlit
    pip install pdfplumber
    pip install pandas
-   pip install matplotlib
    pip install pytesseract
-   pip install python-dotenv
-   pip install PyPDF2
+   pip install time
    pip install langchain
-   pip install langchain_huggingface
-   pip install langchain-community
    pip install transformers
    pip install pdf2image
-   pip install Pillow
+   pip install pillow
+   pip install python-dotenv
+   pip install PyPDF2
+   pip install langchain-huggingface
+   pip install langchain-community
+   pip install faiss-cpu
+   pip install huggingface-hub
    pip install sentencepiece
    pip install sacremoses
    ```
