@@ -2,7 +2,6 @@ import streamlit as st
 import os
 import pdfplumber
 import pandas as pd
-import matplotlib.pyplot as plt
 import time
 import pytesseract
 import tempfile
@@ -17,7 +16,7 @@ from langchain_community.vectorstores import FAISS
 from langchain_community.llms import HuggingFaceHub
 from langchain.memory import ConversationBufferMemory
 from langchain.chains import ConversationalRetrievalChain
-from htmlTemplates import css, bot_template, user_template
+from htmlTemplates import css
 from transformers import MarianMTModel, MarianTokenizer
 from pdf2image import convert_from_path
 from PIL import Image
@@ -107,10 +106,6 @@ def get_vectorstore(text_chunks):
 # TO GET CONVERSATION CHAIN
 def get_conversation_chain(vectorstore, selected_model):
     llm = HuggingFaceHub(
-        # T2T GENERATION
-        # google/flan-t5-base
-        # google/flan-t5-large
-        # describeai/gemini
          repo_id=selected_model,
         model_kwargs={"temperature": 0.5})
     memory = ConversationBufferMemory(
@@ -255,6 +250,14 @@ def summarize_text(text_chunks):
     return final_summary
 
 
+# LARGE TEXT TO INDONESIAN
+def translate_large_text_to_indonesian(text_chunks):
+    translated_chunks = []
+    for chunk in text_chunks:
+        translated_chunks.append(translate_to_indonesian(chunk))
+    return " ".join(translated_chunks)
+
+
 # TRANSLATE TO INDONESIAN
 def translate_to_indonesian(text):
     # Load English to Indonesian model
@@ -270,14 +273,6 @@ def translate_to_indonesian(text):
     # Decode the translated text
     translated_text = tokenizer.decode(translated[0], skip_special_tokens=True)
     return translated_text
-
-
-# LARGE TEXT TO INDONESIAN
-def translate_large_text_to_indonesian(text_chunks):
-    translated_chunks = []
-    for chunk in text_chunks:
-        translated_chunks.append(translate_to_indonesian(chunk))
-    return " ".join(translated_chunks)
 
 
 
