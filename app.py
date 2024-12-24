@@ -59,7 +59,7 @@ def get_pdf_text_and_tables(pdf_docs):
                     else:
                         st.warning(f"No readable text on page {page_number} of {pdf.name}. Attempting OCR...")
                         # Use OCR as fallback only for empty pages
-                        poppler_path = r"C:\Users\Nicholas\Downloads\-Interactive-Chat-App-main\poppler-24.08.0\Library\bin"
+                        poppler_path = r"C:\Users\Nicholas\Downloads\-Interactive-Chat-App-main\poppler-24.08.0\Library\bin"    # DOWNLOAD POPPLER AND MOVE INTO THIS FOLDER, PASTE PATH
                         images = convert_from_path(temp_pdf_path, poppler_path=poppler_path, first_page=page_number, last_page=page_number)
                         
                         for image in images:
